@@ -1,0 +1,6 @@
+[
+  {"cenario":"1A/1B","somas_exibidas":3,"respostas_de_outro_cliente":0,"mensagens_B":4},
+  {"cenario":"2A/1B","somas_exibidas":3,"respostas_de_outro_cliente":0,"mensagens_B":4},
+  {"cenario":"1A/2B","somas_exibidas":4,"respostas_de_outro_cliente":0,"mensagens_B":4},
+  {"cenario":"2A/2B","somas_exibidas":6,"respostas_de_outro_cliente":2,"mensagens_B":8}
+]
