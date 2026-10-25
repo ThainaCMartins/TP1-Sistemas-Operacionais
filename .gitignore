@@ -1,0 +1,6 @@
+*.o
+__pycache__/
+pi_threads
+processo_a
+processo_b
+limpar_filas
