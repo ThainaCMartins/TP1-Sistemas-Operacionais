@@ -1,0 +1,57 @@
+name: Teste 1 - Benchmark de Pi
+
+on:
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - name: Obter codigo
+        uses: actions/checkout@v4
+      - name: Preparar compilacao
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential time python3
+          make pi_threads
+      - name: Registrar ambiente
+        run: |
+          mkdir -p evidencias
+          lscpu > evidencias/hardware_github_runner.txt
+          uname -a > evidencias/sistema.txt
+          cat /etc/os-release >> evidencias/sistema.txt
+          top -b -n 1 | head -30 > evidencias/carga_inicial.txt
+          echo "GitHub-hosted runner: maquina virtual; nao e o notebook do aluno" > evidencias/origem.txt
+      - name: Medir pi - 30 execucoes
+        run: |
+          python3 medir.py github_runner | tee evidencias/log_execucao.txt
+          mv medicoes_github_runner.csv evidencias/
+      - name: Verificar CV e total de medidas
+        run: |
+          python3 - <<'PY'
+          import csv, statistics
+          from collections import defaultdict
+          rows = list(csv.DictReader(open('evidencias/medicoes_github_runner.csv')))
+          assert len(rows) == 30, f'Esperadas 30 medidas, recebidas {len(rows)}'
+          groups = defaultdict(list)
+          for row in rows:
+              groups[int(row['threads'])].append(float(row['segundos']))
+              assert 'termos=1000000000' in row['saida_programa']
+          assert set(groups) == {1,2,4,8,16,32}
+          with open('evidencias/resumo_cv.txt','w') as out:
+              for n in sorted(groups):
+                  ts = groups[n]
+                  cv = 100*statistics.stdev(ts)/statistics.mean(ts)
+                  line = f'{n} threads: media={statistics.mean(ts):.3f}s CV={cv:.2f}%'
+                  print(line)
+                  out.write(line+'\n')
+                  if cv > 5: out.write('AVISO: CV > 5%; repetir a configuracao em ambiente estavel\n')
+          PY
+      - name: Salvar resultados para download
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: teste1-pi-github-runner
+          path: evidencias/
+          if-no-files-found: warn
